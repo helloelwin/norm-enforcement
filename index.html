@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Norm Enforcement for AI Agents</title>
+<style>
+  body {
+    font-family: "Times New Roman", serif;
+    max-width: 700px;
+    margin: 40px auto;
+  }
+  h1 { text-align: center; font-size: 1.6em; }
+  .authors, .affiliation, .email { text-align: center; margin: 4px 0; }
+  .email { font-family: monospace; font-size: 0.9em; }
+  h2 { font-size: 1.2em; margin-top: 2em; }
+  .abstract { text-align: justify; }
+</style>
+</head>
+<body>
+
+<h1>Norm Enforcement for AI Agents:<br>Robustly Shaping Behavior in Multi-Agent Systems</h1>
+
+<p class="authors">Yaowen Ye &nbsp;&nbsp; Jacob Steinhardt</p>
+<p class="affiliation">University of California, Berkeley</p>
+<p class="email">{elwin, jsteinhardt}@berkeley.edu</p>
+
+<h2>Abstract</h2>
+<p class="abstract">
+AI agents are increasingly deployed in shared environments where they pursue diverse goals and compete for rewards. This multi-agent competition can lead to behaviors that serve individual gains at collective cost&mdash;for instance, marketing agents may post misleading content as a result of competing for engagement on social media. Human societies address such problems through <em>norms</em> that constrain acceptable behavior, supported by <em>enforcement mechanisms</em> that detect and penalize violations. Motivated by this, we study norm enforcement mechanisms for language model agents. We find that simple enforcement mechanisms are exploited by misaligned agents for competitive advantage, even when they are not explicitly trained or prompted to do so. We thus turn our attention to designing more robust mechanisms, and identify two key ingredients: estimating each agent&rsquo;s reliability over time, and updating this estimate with escalating penalties for repeated misbehavior. Across three simulated environments and a variety of agent populations, mechanisms built on these principles resist exploitation, while still penalizing norm violations at comparable or lower cost than baselines. Our results position norm enforcement mechanisms as promising levers for shaping agents&rsquo; behavior, but only when designed to anticipate becoming part of the system they govern.
+</p>
+
+</body>
+</html>
