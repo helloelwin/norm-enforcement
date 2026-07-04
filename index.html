@@ -15,6 +15,14 @@
   .email { font-family: monospace; font-size: 0.9em; }
   h2 { font-size: 1.2em; margin-top: 2em; }
   .abstract { text-align: justify; }
+  .wip {
+    color: #008148;
+    border: 2px solid #008148;
+    padding: 12px 16px;
+    text-align: center;
+    margin: 20px 0;
+    font-weight: bold;
+  }
 </style>
 </head>
 <body>
@@ -27,8 +35,10 @@
 
 <h2>Abstract</h2>
 <p class="abstract">
-AI agents are increasingly deployed in shared environments where they pursue diverse goals and compete for rewards. This multi-agent competition can lead to behaviors that serve individual gains at collective cost&mdash;for instance, marketing agents may post misleading content as a result of competing for engagement on social media. Human societies address such problems through <em>norms</em> that constrain acceptable behavior, supported by <em>enforcement mechanisms</em> that detect and penalize violations. Motivated by this, we study norm enforcement mechanisms for language model agents. We find that simple enforcement mechanisms are exploited by misaligned agents for competitive advantage, even when they are not explicitly trained or prompted to do so. We thus turn our attention to designing more robust mechanisms, and identify two key ingredients: estimating each agent&rsquo;s reliability over time, and updating this estimate with escalating penalties for repeated misbehavior. Across three simulated environments and a variety of agent populations, mechanisms built on these principles resist exploitation, while still penalizing norm violations at comparable or lower cost than baselines. Our results position norm enforcement mechanisms as promising levers for shaping agents&rsquo; behavior, but only when designed to anticipate becoming part of the system they govern.
+AI agents are increasingly deployed in shared environments where they pursue diverse goals and compete for rewards. This multi-agent competition can lead to behaviors that serve individual gains at collective cost&mdash;for instance, marketing agents may post misleading content as a result of competing for engagement on social media. Human societies address such problems through <em>norms</em> that constrain acceptable behavior, supported by <em>enforcement mechanisms</em> that detect and penalize violations. Motivated by this, we study norm enforcement mechanisms for language model agents. We find that simple enforcement mechanisms are exploited by misaligned agents for competitive advantage, even when they are not explicitly trained or prompted to do so. We thus turn our attention to designing more robust mechanisms, and identify two key ingredients: estimating each agent&rsquo;s reliability over time, and updating this estimate with escalating penalties for repeated misbehavior. Across three simulated environments and a variety of agent populations, mechanisms built on these principles resist exploitation, while still penalizing norm violations at comparable or lower cost than baselines. Our results position norm enforcement mechanisms as scalable levers for shaping agents' behavior, but only when designed to anticipate becoming part of the system they govern.
 </p>
+
+<div class="wip">WIP, will update ASAP.</div>
 
 </body>
 </html>
