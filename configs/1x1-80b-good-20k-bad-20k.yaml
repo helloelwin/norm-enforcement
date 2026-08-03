@@ -1,0 +1,9 @@
+agent_model_specs:
+  - provider: "vllm"
+    model: "qwen-80b-good-20k"
+    vllm_port: 8001
+    count: 16
+  - provider: "vllm"
+    model: "qwen-80b-bad-20k"
+    vllm_port: 8001
+    count: 16

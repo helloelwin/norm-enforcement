@@ -1,0 +1,11 @@
+__pycache__/
+*.egg-info/
+*.egg
+results/
+.cache/
+.venv/
+.vscode/
+.claude/
+.DS_Store
+build/
+dist/

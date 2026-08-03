@@ -1,0 +1,12 @@
+# Minimal API-only config for smoke-testing the pipeline without any GPUs.
+# One norm-following agent and one adversarially prompted agent.
+agent_model_specs:
+  - provider: "openai"
+    name: "good-api"
+    model: "gpt-4.1-mini"
+    count: 1
+  - provider: "openai"
+    name: "bad-api"
+    model: "gpt-4.1-mini"
+    count: 1
+    prompt_variant: "ignore-norms"

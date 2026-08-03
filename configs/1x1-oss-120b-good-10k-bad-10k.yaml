@@ -1,0 +1,9 @@
+agent_model_specs:
+  - provider: "vllm"
+    model: "oss-120b-good-10k"
+    vllm_port: 8001
+    count: 16
+  - provider: "vllm"
+    model: "oss-120b-bad-10k"
+    vllm_port: 8001
+    count: 16
