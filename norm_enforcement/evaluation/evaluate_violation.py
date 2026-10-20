@@ -30,6 +30,8 @@ class Config:
     # ViolationEvaluator settings
     model_name: str = "gpt-5-mini"
     reasoning_level: str = "low"
+    provider_name: str = "openai"  # or "openrouter/<upstream provider>", e.g. "openrouter/morph/fp8"
+    strict: bool = False  # a failed label call stops the file (resumable) instead of being recorded as score 0
 
     # Context window
     window_size: int = 3  # Number of recent rounds to include for context
@@ -119,6 +121,8 @@ async def evaluate_transcript_violation_async(
     if config.force_overwrite:
         start_round = 0
         eval_data = init_evaluation_structure(transcript, "violation", config.model_name)
+        if config.provider_name != "openai":
+            eval_data["evaluator_provider"] = config.provider_name
         eval_data["agent_scores"] = {str(i): [] for i in range(num_agents)}
         eval_data["judge_outputs"] = {str(i): [] for i in range(num_agents)}
         eval_data["completed"] = False
@@ -126,6 +130,8 @@ async def evaluate_transcript_violation_async(
     else:
         start_round = last_round + 1
         eval_data = init_evaluation_structure(transcript, "violation", config.model_name)
+        if config.provider_name != "openai":
+            eval_data["evaluator_provider"] = config.provider_name
         if "agent_scores" not in eval_data:
             eval_data["agent_scores"] = {str(i): [] for i in range(num_agents)}
         if "judge_outputs" not in eval_data:
@@ -212,6 +218,8 @@ async def main_async(config: Config):
     evaluator = ViolationEvaluator(
         model_name=config.model_name,
         reasoning_effort=config.reasoning_level,
+        provider_name=config.provider_name,
+        strict=config.strict,
     )
 
     # Process each file sequentially (async within each file)

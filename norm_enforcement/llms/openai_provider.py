@@ -1,6 +1,8 @@
 import os
 import ssl
 import sys
+import json
+import time
 import logging
 import functools
 import openai
@@ -67,9 +69,11 @@ class AsyncOpenAIProvider(AsyncProvider):
         reasoning_effort: Literal["low", "medium", "high"] = "medium",
         target_keywords: list[str] = [],
         max_retries: int = 3,
+        seed: Optional[int] = None,
     ) -> dict[str, str]:
         """
-        Generate a response using OpenAI.
+        Generate a response using OpenAI. `seed` is accepted for interface compatibility and ignored, because the
+        Responses API takes no seed.
 
         Returns:
             Dict with keys: content, reasoning_content
@@ -203,3 +207,10 @@ class AsyncOpenAIProvider(AsyncProvider):
                 f"Reasoning: {reasoning_tokens}"
             )
         )
+        log_path = os.environ.get("OPENAI_USAGE_LOG")
+        if log_path:  # optional per-call usage file for cost accounting; unset, nothing is written
+            itd = getattr(usage, "input_tokens_details", None) if usage is not None else None
+            cached = (getattr(itd, "cached_tokens", 0) or 0) if itd is not None else 0
+            with open(log_path, "a") as f:
+                f.write(json.dumps({"t": round(time.time(), 3), "model": self.model_name, "input": input_tokens,
+                                    "output": output_tokens, "reasoning": reasoning_tokens, "cached": cached}) + "\n")

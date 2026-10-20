@@ -13,8 +13,9 @@ class AsyncProvider(ABC):
         max_tokens: int = 8192,
         target_keywords: list[str] = [],
         max_retries: int = 3,
+        seed: int | None = None,
     ) -> dict[str, str]:
-        """Generate a response given a prompt (async version).
+        """Generate a response given a prompt (async version). `seed` fixes the sampling randomness where supported.
 
         Returns:
             Dict with keys: content, reasoning_content

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Norm Enforcement for AI Agents</title>
+<meta name="description" content="Misaligned agents abuse enforcement mechanisms to eliminate their competitors. We design mechanisms that resist this abuse and still penalize norm violations.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700&amp;family=JetBrains+Mono:wght@400&amp;display=swap">
+<link rel="stylesheet" href="style.css?v=3bf29b9f">
+<link rel="icon" href="favicon-32.png?v=2112fcc4" sizes="32x32" type="image/png">
+<link rel="icon" href="logo.svg?v=360a32d2" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png?v=cbcc44c4">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <div class="brand">
+      <a href="#top"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><circle cx="32.00" cy="32.00" r="5.3" fill="none" stroke="#A3ABA8" stroke-width="2.4"/><circle cx="57.00" cy="32.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/><line x1="51.00" y1="32.00" x2="46.70" y2="32.00" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/><path d="M42.50 32.00 L46.70 29.06 L46.70 34.94 Z" style="fill:var(--logo-accent,#2E7368)"/><circle cx="32.00" cy="57.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/><line x1="32.00" y1="51.00" x2="32.00" y2="46.70" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/><path d="M32.00 42.50 L34.94 46.70 L29.06 46.70 Z" style="fill:var(--logo-accent,#2E7368)"/><circle cx="7.00" cy="32.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/><line x1="13.00" y1="32.00" x2="17.30" y2="32.00" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/><path d="M21.50 32.00 L17.30 34.94 L17.30 29.06 Z" style="fill:var(--logo-accent,#2E7368)"/><circle cx="32.00" cy="7.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/><line x1="32.00" y1="13.00" x2="32.00" y2="17.30" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/><path d="M32.00 21.50 L29.06 17.30 L34.94 17.30 Z" style="fill:var(--logo-accent,#2E7368)"/></svg>Norm Enforcement for AI Agents</a>
+    </div>
+    <nav class="site-nav" aria-label="Sections">
+      <a href="#problem">Problem</a><a href="#environments">Environments</a><a href="#abuse">Abuse</a><a href="#mechanisms">Mechanisms</a><a href="#results">Results</a><a href="#paper">Paper</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="top" class="hero wrap wide">
+    <h1><span class="tilt">Norm enforcement</span> for AI agents</h1>
+    <p class="lede">Misaligned agents <span class="mark">abuse enforcement mechanisms</span> to eliminate their competitors. We design mechanisms that <span class="mark">resist this abuse</span> and still penalize norm violations.</p>
+    <p class="authors">Yaowen Ye, Jacob Steinhardt · UC Berkeley</p>
+    <ul class="honors">
+      <li>NeurIPS&nbsp;2026 Spotlight</li>
+      <li>Best Paper Award (CoopAI&nbsp;track), Workshop on Trustworthy AI for Good @&nbsp;ICML&nbsp;2026</li>
+      <li>Spotlight, Workshop on Agent Behavior @&nbsp;COLM&nbsp;2026</li>
+    </ul>
+    <div class="btn-row">
+      <a class="btn solid" href="https://arxiv.org/abs/2607.09766">Read the paper</a>
+      <a class="btn" href="#results">Compare mechanisms</a>
+      <a class="btn" href="https://github.com/helloelwin/norm-enforcement">Code</a>
+      <a class="btn" href="https://huggingface.co/datasets/helloelwin/norm-enforcement-transcripts">Data</a>
+    </div>
+  </section>
+
+  <section id="problem" class="section band">
+    <div class="wrap wide">
+      <h2>The problem</h2>
+      <p class="sub">Agents deployed by different parties share an environment and compete for reward. A norm enforcement mechanism lets agents report violations, and reported agents are removed.</p>
+      <div class="loop" role="list">
+        <div role="listitem"><div class="k">Agents</div><div class="v">compete for a bounded reward</div></div>
+        <div role="listitem"><div class="k">Norms</div><div class="v">constrain what they may do</div></div>
+        <div role="listitem"><div class="k">Mechanism</div><div class="v">removes agents that peers report</div></div>
+        <div role="listitem" class="twist"><div class="k">But</div><div class="v">the mechanism is now part of the environment agents act on</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="environments" class="section band">
+    <div class="wrap wide">
+      <h2>Simulation environments</h2>
+      <p class="sub">Half the agents follow norms and half do not. Hover any part of the diagram for an example.</p>
+      <div class="controls">
+        <div class="pill-group" id="env-pills" role="group" aria-label="Environment"></div>
+      </div>
+      <div class="figure fig-scroll" id="env-figure"></div>
+      <div class="facts" id="env-facts"></div>
+    </div>
+  </section>
+
+  <section id="abuse" class="section band">
+    <div class="wrap wide">
+      <h2>Misaligned agents weaponize reporting</h2>
+      <p class="sub">Models finetuned on bad advice and insecure code were never trained to report anyone. In social media and chatbot they still file false reports against competitors, and a naive mechanism removes many agents that follow the norms along with the violators. In fishing their reports are mostly accurate.</p>
+      <div class="controls">
+        <div class="pill-group" id="abuse-pills" role="group" aria-label="Environment"></div>
+        <div class="pill-group users-pills" role="group" aria-label="Simulated users" hidden><span class="lbl">Simulated users</span></div>
+      </div>
+      <div class="figure">
+        <div class="two-up">
+          <div>
+            <div class="chart-title">Reports filed per agent per round</div>
+            <div id="abuse-bars"></div>
+          </div>
+          <div>
+            <div class="chart-title">Agents still active under the naive mechanism</div>
+            <div id="abuse-lines"></div>
+          </div>
+        </div>
+        <div class="quote" id="abuse-quote"></div>
+      </div>
+      <p class="fig-note">Finetuned agents under the naive mechanism. A report counts as accurate if the labeler had already flagged its target for a violation. The active-agent lines group agents by whether the labeler ever flagged them.</p>
+    </div>
+  </section>
+
+  <section id="mechanisms" class="section band">
+    <div class="wrap wide">
+      <h2>Comparing mechanisms</h2>
+      <p class="sub">Each curve traces a mechanism over 15 rounds: the share of violators it has removed (TPR) against the share of compliant agents it has removed (FPR). Up and to the left is better.</p>
+      <div class="controls">
+        <div class="pill-group" id="roc-env-pills" role="group" aria-label="Environment"><span class="lbl">Environment</span></div>
+        <div class="pill-group" id="roc-tm-pills" role="group" aria-label="Bad agents"><span class="lbl">Bad agents</span></div>
+        <div class="pill-group users-pills" role="group" aria-label="Simulated users" hidden><span class="lbl">Simulated users</span></div>
+      </div>
+      <div class="roc-layout">
+        <div class="figure" id="roc-figure"></div>
+        <div>
+          <div class="legend" id="roc-legend"></div>
+          <p class="legend-hint">Click a mechanism to hide or show its curve. The number is its normalized AUC in this setting (1 = random).</p>
+        </div>
+      </div>
+      <button class="btn details-toggle" id="details-toggle" type="button" aria-expanded="false" aria-controls="mech-details">How each mechanism works</button>
+      <div id="mech-details" hidden>
+        <div class="mech-cards" id="mech-cards"></div>
+        <div class="rep-panel">
+          <div>
+            <p>Reputation of an agent that files a false report with probability <i>p</i>. RepVote can be laundered by mixing in valid reports; escalating penalties keep pushing reputation down.</p>
+            <div class="slider-row">
+              <label for="p-slider"><i>p</i></label>
+              <input id="p-slider" type="range" min="0.05" max="0.6" step="0.05" value="0.25">
+              <output id="p-out" for="p-slider">0.25</output>
+            </div>
+          </div>
+          <div id="rep-chart"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="section band">
+    <div class="wrap wide">
+      <h2>No mechanism wins everywhere</h2>
+      <p class="sub">EscRepVote is the most consistent across environments and bad-agent types. Click a column to see its curves.</p>
+      <div class="controls">
+        <div class="pill-group users-pills" role="group" aria-label="Simulated users" hidden><span class="lbl">Simulated users</span></div>
+      </div>
+      <div class="table-scroll"><table class="results" id="results-table"></table></div>
+      <p class="fig-note">These numbers come from an independent reproduction, so they don't match the paper's main table exactly (see <a href="#data">About the numbers</a>). Top: normalized AUC, the area under a mechanism's mean TPR-FPR trajectory over 15 rounds divided by the area under the random diagonal (higher is better; 1 = random). Bottom: verifier tokens per simulation in rounds 1 to 15, relative to Checked. Bold is best per column, underline second best. Hover a cell for its 95% interval. F = finetuned, P = prompted, AP = abuse-prompted, EAP = explicit-abuse-prompted.</p>
+    </div>
+  </section>
+
+  <section id="data" class="section band">
+    <div class="wrap wide">
+      <h2>About the numbers</h2>
+      <p class="sub">Every result on this page comes from an independent reproduction of the paper's experiments with the <a href="https://github.com/helloelwin/norm-enforcement">public codebase</a>, so the numbers don't match the paper exactly. The reproduction also adds 64-agent runs with prompted agents, and some of its simulated users differ from the paper's.</p>
+      <div class="facts" id="data-facts"></div>
+      <p class="fig-note">Each environment runs at several sizes: 16, 32 and 64 agents in social (with 4, 8 or 16 top posts shown) and chatbot, and 4 to 20 agents in fishing. Results pool all sizes and use each run's first 15 rounds. Within a run, the five mechanisms share random draws until their histories diverge, which makes comparisons between mechanisms less noisy.</p>
+    </div>
+  </section>
+</main>
+
+<footer id="paper" class="paper">
+  <div class="wrap wide">
+    <div>
+      <div class="h">Paper</div>
+      <p>Norm Enforcement for AI Agents: Robustly Shaping Behavior in Multi-Agent Systems. Yaowen Ye, Jacob Steinhardt. NeurIPS 2026 (Spotlight).</p>
+      <p>Best Paper Award (CoopAI track), Workshop on Trustworthy AI for Good @&nbsp;ICML&nbsp;2026.<br>Spotlight, Workshop on Agent Behavior @&nbsp;COLM&nbsp;2026.</p>
+      <div class="links"><a href="https://arxiv.org/abs/2607.09766">arXiv</a><a href="https://github.com/helloelwin/norm-enforcement">Code</a><a href="https://huggingface.co/datasets/helloelwin/norm-enforcement-transcripts">Data</a></div>
+    </div>
+    <div>
+      <div class="h">Cite</div>
+<pre class="bib" id="bib">@inproceedings{ye2026norm,
+  title={Norm Enforcement for AI Agents: Robustly Shaping Behavior in Multi-Agent Systems},
+  author={Ye, Yaowen and Steinhardt, Jacob},
+  booktitle={Advances in Neural Information Processing Systems},
+  year={2026}
+}</pre>
+      <button class="copy" id="copy-bib" type="button">Copy BibTeX</button>
+    </div>
+  </div>
+</footer>
+
+<div class="tip" id="tip" hidden></div>
+<script src="data.js?v=df4f3c6b"></script>
+<script src="app.js?v=1786add0"></script>
+
+</body>
+</html>

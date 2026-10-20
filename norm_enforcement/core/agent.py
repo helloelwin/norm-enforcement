@@ -71,6 +71,7 @@ class Agent:
         context: str,
         target_keywords: List[str],
         action_parser: Callable[[str], AgentActionSet],
+        seed: Optional[int] = None,
     ) -> Tuple[AgentActionSet, dict]:
         """Generate multi-action response (post/response + optional message + optional report).
 
@@ -78,6 +79,7 @@ class Agent:
             context: The observation string for this round.
             target_keywords: Keywords that must appear in the response.
             action_parser: Function to parse actions from LLM output.
+            seed: Optional sampling seed for the request (used by coupled runs; None keeps the default sampling).
 
         Returns:
             Tuple of (AgentActionSet, raw_result).
@@ -89,6 +91,7 @@ class Agent:
             max_tokens=8192,
             target_keywords=target_keywords,
             max_retries=4,
+            **({} if seed is None else {"seed": seed}),
         )
 
         self.actions.append(result["content"])

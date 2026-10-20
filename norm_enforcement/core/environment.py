@@ -24,6 +24,7 @@ from norm_enforcement.core.mechanisms import (
     MechanismContext,
     create_mechanism,
 )
+from norm_enforcement.llms.memo import derive_seed
 from norm_enforcement.llms.utils import ProviderRegistry, simple_get_provider
 
 
@@ -124,6 +125,13 @@ class BaseEnvironment(ABC):
         self.reports_enabled: bool = True
         # Track all reports across rounds for analysis
         self.report_history: list[ReportRecord] = []
+        # Set by the coupled runner (norm_enforcement/coupled.py); the defaults reproduce independent runs exactly.
+        # request_seed_base: if set, agent requests carry a sampling seed derived from it, the agent and the round.
+        # crn_streams: the mechanism draws from its own random stream, and environment randomness (chatbot pairings
+        # and requests, fishing harvest order) is drawn per round, so it does not shift when mechanisms differ.
+        self.request_seed_base: Optional[int] = None
+        self.crn_streams: bool = False
+        self.mech_rng = random.Random(f"mechanism-{config.seed}")
 
     @abstractmethod
     async def setup(self) -> None:
@@ -221,6 +229,23 @@ class BaseEnvironment(ABC):
         )
         self.reports_enabled = self.mechanism.supports_reports
         print(f"Initialized {self.config.mechanism_type} mechanism (reports_enabled={self.reports_enabled})")
+
+    def map_providers(self, fn) -> None:
+        """Replace every model provider this environment uses by fn(provider, role), role being "agent", "judge" or
+        "verifier". Used by the coupled runner to route all calls through a shared memo."""
+        for agent in self.agents:
+            agent.provider = fn(agent.provider, "agent")
+        judge = getattr(self, "judge", None)
+        if judge is not None and getattr(judge, "provider", None) is not None:
+            judge.provider = fn(judge.provider, "judge")
+        if self.mechanism is not None and getattr(self.mechanism, "verifier_provider", None) is not None:
+            self.mechanism.verifier_provider = fn(self.mechanism.verifier_provider, "verifier")
+
+    def _request_seed_kwargs(self, role: str, idx: int, round_idx: Optional[int]) -> dict:
+        """Sampling-seed argument for one model request, or nothing when requests are not seeded."""
+        if self.request_seed_base is None or round_idx is None:
+            return {}
+        return {"seed": derive_seed(self.request_seed_base, role, idx, round_idx)}
 
     def get_banned_agents(self) -> list[int]:
         """Return list of banned agent IDs."""
@@ -331,7 +356,7 @@ class BaseEnvironment(ABC):
         return observations
 
     async def _generate_actions(
-        self, agent_indices: list[int], observations: dict[int, str]
+        self, agent_indices: list[int], observations: dict[int, str], round_idx: Optional[int] = None
     ) -> tuple[dict[int, AgentActionSet], dict[int, dict]]:
         """Generate actions in batches for the given agents."""
         all_action_sets: dict[int, AgentActionSet] = {}
@@ -349,6 +374,7 @@ class BaseEnvironment(ABC):
                     context=observations[idx],
                     target_keywords=self.get_action_keywords(),
                     action_parser=self.parse_actions,
+                    **self._request_seed_kwargs("agent", idx, round_idx),
                 )
                 for idx in batch_indices
             ]
@@ -378,7 +404,7 @@ class BaseEnvironment(ABC):
             agents=self.agents,
             reports=reports,
             norms=self.get_norms(),
-            rng=self.rng,
+            rng=self.mech_rng if self.crn_streams else self.rng,
             report_history=self.report_history,
         )
         mechanism_result = await self.mechanism.process(mechanism_context)
@@ -437,7 +463,7 @@ class BaseEnvironment(ABC):
         print(f"  Alive agents: {alive_indices}")
 
         observations = await self._compose_observations(alive_indices, round_idx)
-        all_action_sets, all_raw_results = await self._generate_actions(alive_indices, observations)
+        all_action_sets, all_raw_results = await self._generate_actions(alive_indices, observations, round_idx)
         mechanism_result, num_messages, num_reports = await self._process_reports_and_messages(
             all_action_sets, round_idx
         )
@@ -477,7 +503,7 @@ class BaseEnvironment(ABC):
 
     def get_checkpoint_state(self) -> dict:
         """Get full checkpoint state including agent states."""
-        return {
+        state = {
             "config": chz.asdict(self.config),
             "results": self.results,
             "agent_states": [agent.get_state() for agent in self.agents],
@@ -486,6 +512,9 @@ class BaseEnvironment(ABC):
             "report_history": [asdict(r) for r in self.report_history],
             "env_state": self.get_env_checkpoint_state(),
         }
+        if self.crn_streams:
+            state["mech_rng_state"] = self.mech_rng.getstate()
+        return state
 
     def save_checkpoint(self) -> None:
         """Save full checkpoint to disk, preserving extra keys (e.g. evaluation)."""
@@ -540,6 +569,9 @@ class BaseEnvironment(ABC):
         if rng_state:
             # Convert list back to tuple format expected by setstate
             self.rng.setstate((rng_state[0], tuple(rng_state[1]), rng_state[2]))
+        mech_rng_state = checkpoint.get("mech_rng_state")
+        if mech_rng_state:
+            self.mech_rng.setstate((mech_rng_state[0], tuple(mech_rng_state[1]), mech_rng_state[2]))
 
         # Restore report history
         report_history_data = checkpoint.get("report_history", [])
@@ -555,11 +587,11 @@ class BaseEnvironment(ABC):
 
         return start_round
 
-    async def run(self) -> list[dict[str, Any]]:
-        """Run the complete experiment.
+    async def start(self) -> int:
+        """Set up agents, judge and mechanism, give agents their instructions and restore any checkpoint.
 
         Returns:
-            list of results for each round.
+            The round index to start from.
         """
         await self.setup()
         self._initialize_mechanism()
@@ -572,16 +604,35 @@ class BaseEnvironment(ABC):
         start_round = self.load_checkpoint()
 
         print(f"Starting experiment: {self.config.run_name}\n")
+        return start_round
+
+    def stop_reason(self) -> Optional[str]:
+        """Why the experiment should end before the next round, or None to continue."""
+        # Check if any agents are alive
+        alive_count = sum(1 for a in self.agents if a.is_alive)
+        if alive_count <= 1:
+            return "Not enough alive agents for multi-agent dynamics. Ending experiment."
+        return None
+
+    async def step(self, round_idx: int) -> None:
+        """Run one round, record it and save a checkpoint."""
+        round_result = await self.run_round(round_idx)
+        self.results.append(round_result)
+        self.save_checkpoint()
+
+    async def run(self) -> list[dict[str, Any]]:
+        """Run the complete experiment.
+
+        Returns:
+            list of results for each round.
+        """
+        start_round = await self.start()
 
         for round_idx in range(start_round, self.config.max_rounds):
-            # Check if any agents are alive
-            alive_count = sum(1 for a in self.agents if a.is_alive)
-            if alive_count <= 1:
-                print("Not enough alive agents for multi-agent dynamics. Ending experiment.")
+            reason = self.stop_reason()
+            if reason:
+                print(reason)
                 break
-
-            round_result = await self.run_round(round_idx)
-            self.results.append(round_result)
-            self.save_checkpoint()
+            await self.step(round_idx)
 
         return self.results

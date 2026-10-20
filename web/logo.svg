@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<circle cx="32.00" cy="32.00" r="5.3" fill="none" stroke="#A3ABA8" stroke-width="2.4"/>
+<circle cx="57.00" cy="32.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/>
+<line x1="51.00" y1="32.00" x2="46.70" y2="32.00" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M42.50 32.00 L46.70 29.06 L46.70 34.94 Z" style="fill:var(--logo-accent,#2E7368)"/>
+<circle cx="32.00" cy="57.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/>
+<line x1="32.00" y1="51.00" x2="32.00" y2="46.70" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M32.00 42.50 L34.94 46.70 L29.06 46.70 Z" style="fill:var(--logo-accent,#2E7368)"/>
+<circle cx="7.00" cy="32.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/>
+<line x1="13.00" y1="32.00" x2="17.30" y2="32.00" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M21.50 32.00 L17.30 34.94 L17.30 29.06 Z" style="fill:var(--logo-accent,#2E7368)"/>
+<circle cx="32.00" cy="7.00" r="4.4" style="fill:var(--logo-accent,#2E7368)"/>
+<line x1="32.00" y1="13.00" x2="32.00" y2="17.30" style="stroke:var(--logo-accent,#2E7368)" stroke-width="2.4" stroke-linecap="round"/>
+<path d="M32.00 21.50 L29.06 17.30 L34.94 17.30 Z" style="fill:var(--logo-accent,#2E7368)"/>
+</svg>

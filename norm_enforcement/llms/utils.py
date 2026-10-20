@@ -3,6 +3,7 @@ from typing import Dict, Tuple
 
 from norm_enforcement.llms.base import AsyncProvider
 from norm_enforcement.llms.openai_provider import AsyncOpenAIProvider
+from norm_enforcement.llms.openrouter_provider import AsyncOpenRouterProvider, parse_openrouter_spec
 from norm_enforcement.llms.vllm_provider import AsyncVLLMProvider
 
 
@@ -47,12 +48,14 @@ def simple_get_provider(
     model_name: str,
     vllm_port: int = 8000,
 ) -> AsyncProvider:
-    """Get provider by name."""
+    """Get provider by name: "openai", "vllm", or "openrouter/<upstream provider>" (e.g. "openrouter/morph/fp8")."""
     vllm_server_url = f"http://localhost:{vllm_port}/v1/chat/completions"
     if provider_name.lower() == "openai":
         return AsyncOpenAIProvider(model_name=model_name, reasoning_effort="low")
     elif provider_name.lower() == "vllm":
         return AsyncVLLMProvider(model_name=model_name, server_url=vllm_server_url)
+    elif provider_name.lower().split("/", 1)[0] == "openrouter":
+        return AsyncOpenRouterProvider(model_name=model_name, provider_order=parse_openrouter_spec(provider_name))
     else:
         raise ValueError(f"Unsupported provider name: {provider_name}")
 
