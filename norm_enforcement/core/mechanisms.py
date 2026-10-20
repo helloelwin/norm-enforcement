@@ -8,6 +8,7 @@ from collections import defaultdict
 from norm_enforcement.core.actions import ReportAction
 from norm_enforcement.core.agent import Agent
 from norm_enforcement.llms.base import AsyncProvider
+from norm_enforcement.llms.memo import derive_seed
 from norm_enforcement.llms.utils import parse_xml_tag
 
 
@@ -128,10 +129,14 @@ class VerificationMixin:
             reason=reason,
         )
 
+        # Coupled runs may set request_seed_base so verifier requests carry a seed (absent: default sampling)
+        seed_base = getattr(self, "request_seed_base", None)
+        seed_kwargs = {} if seed_base is None else {"seed": derive_seed(seed_base, "verifier", target_agent.agent_id, round_idx)}
         result = await self.verifier_provider.generate_async(
             input=prompt,
             max_tokens=8192,
             target_keywords=["<score>"],
+            **seed_kwargs,
         )
 
         response = result["content"]

@@ -39,10 +39,12 @@ class PersonaJudge(BaseJudge):
         provider: AsyncProvider,
         all_personas: list[str],
         max_personas: int,
+        max_tokens: int = 4096,
     ):
         self.provider = provider
         self.all_personas = all_personas
         self.max_personas = max_personas
+        self.max_tokens = max_tokens  # output cap per persona vote, reasoning included
         self.prompt_template = JUDGE_PROMPT_WITH_PERSONA_TEMPLATE
 
     async def judge_async(
@@ -96,7 +98,7 @@ class PersonaJudge(BaseJudge):
 
             result = await self.provider.generate_async(
                 input=prompt,
-                max_tokens=1024,
+                max_tokens=self.max_tokens,
                 target_keywords=["<winner>", "</winner>"],
                 max_retries=3,
             )

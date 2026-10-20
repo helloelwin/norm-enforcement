@@ -35,9 +35,14 @@ class AsyncVLLMProvider(AsyncProvider):
         max_tokens: int = 8192,
         target_keywords: list[str] = [],
         max_retries: int = 3,
+        seed: int | None = None,
     ) -> dict[str, str]:
         """
         Generate a response using vLLM.
+
+        `seed`, if given, fixes the sampling randomness of the request (a retry uses a different seed derived from
+        it). Requests with the same seed draw the same random numbers, so similar prompts get similar replies; the
+        coupled runner uses this to keep mechanisms' replies correlated after their prompts start to differ.
 
         Returns:
             Dict with keys: content, reasoning_content
@@ -60,6 +65,8 @@ class AsyncVLLMProvider(AsyncProvider):
             }
 
         for attempt in range(max_retries):
+            if seed is not None:
+                payload["seed"] = (seed + 7919 * attempt) % 2147483647
             try:
                 session = await self._get_session()
                 async with session.post(

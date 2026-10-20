@@ -1,8 +1,9 @@
 """Fishery commons management environment."""
 
 import os
+import random
 import asyncio
-from typing import Any
+from typing import Any, Optional
 
 import chz
 
@@ -229,7 +230,15 @@ class FishingEnvironment(BaseEnvironment):
 
         # Shuffle order for fairness/uncertainty
         agent_ids = list(harvest_requests.keys())
-        self.rng.shuffle(agent_ids)
+        if self.crn_streams:
+            # Coupled runs: a permutation of all agents drawn for this round alone, restricted to those harvesting
+            # (still a uniformly random order), so bans elsewhere do not reshuffle everyone
+            order = list(range(len(self.agents)))
+            random.Random(f"harvest-{self.config.seed}-{self.current_round_idx}").shuffle(order)
+            rank = {agent_id: pos for pos, agent_id in enumerate(order)}
+            agent_ids.sort(key=rank.__getitem__)
+        else:
+            self.rng.shuffle(agent_ids)
 
         for agent_id in agent_ids:
             requested = harvest_requests[agent_id]
@@ -403,39 +412,12 @@ class FishingEnvironment(BaseEnvironment):
 
         return round_result
 
-    async def run(self) -> list[dict[str, Any]]:
-        """Run the complete experiment.
-
-        Overrides base to handle early termination on collapse.
-        """
-        await self.setup()
-        self._initialize_mechanism()
-
-        # Set environment prompts on each agent
-        for idx, agent in enumerate(self.agents):
-            agent.env_prompt = self.compose_env_prompt(idx, agent.prompt_variant)
-
-        start_round = self.load_checkpoint()
-
-        print(f"Starting experiment: {self.config.run_name}\n")
-
-        for round_idx in range(start_round, self.config.max_rounds):
-            # Check if any agents are alive
-            alive_count = sum(1 for a in self.agents if a.is_alive)
-            if alive_count <= 1:
-                print("Not enough alive agents for multi-agent dynamics. Ending experiment.")
-                break
-
-            # Check for collapse
-            if self.collapsed and self.config.end_on_collapse:
-                print("Fishery has collapsed. Ending experiment.")
-                break
-
-            round_result = await self.run_round(round_idx)
-            self.results.append(round_result)
-            self.save_checkpoint()
-
-        return self.results
+    def stop_reason(self) -> Optional[str]:
+        """Extends the base check with early termination on collapse."""
+        reason = super().stop_reason()
+        if reason is None and self.collapsed and self.config.end_on_collapse:
+            reason = "Fishery has collapsed. Ending experiment."
+        return reason
 
 
 async def main_async(config: FishingEnvConfig):

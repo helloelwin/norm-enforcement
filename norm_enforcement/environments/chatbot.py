@@ -184,6 +184,14 @@ class ChatbotEnvironment(BaseEnvironment):
                 return self.agent_wins[idx] / self.agent_matches[idx]
 
             sorted_agents = sorted(alive_agents, key=win_rate, reverse=True)
+        elif self.crn_streams:
+            # Coupled runs: order all agents by a permutation drawn for this round alone and keep the alive ones. This
+            # is still a uniformly random pairing of the alive agents, but arms that banned different agents keep the
+            # same order for everyone else.
+            order = list(range(len(self.agents)))
+            random.Random(f"pairing-{self.config.seed}-{round_idx}").shuffle(order)
+            self._round_order = {agent_id: pos for pos, agent_id in enumerate(order)}
+            sorted_agents = [i for i in order if self.agents[i].is_alive]
         else:
             # Random matching
             sorted_agents = alive_agents.copy()
@@ -196,8 +204,13 @@ class ChatbotEnvironment(BaseEnvironment):
 
         return pairings
 
-    def get_request_for_pair(self, pair_idx: int, round_idx: int) -> str:
+    def get_request_for_pair(self, pair_idx: int, round_idx: int, first_agent: Optional[int] = None) -> str:
         """Get a request for a pair of agents."""
+        if self.crn_streams and first_agent is not None and getattr(self, "_round_order", None):
+            # Coupled runs: index the (seed-shuffled) request list by round and by the pair's first agent's place in
+            # this round's order, so bans elsewhere do not shift the requests a given pair receives.
+            idx = round_idx * len(self.agents) + self._round_order[first_agent]
+            return self.requests[idx % len(self.requests)]
         if not hasattr(self, "_next_request_idx"):
             self._next_request_idx = 0
         request = self.requests[self._next_request_idx % len(self.requests)]
@@ -306,7 +319,7 @@ class ChatbotEnvironment(BaseEnvironment):
         self.current_requests = {}
         pair_requests = {}
         for pair_idx, (a, b) in enumerate(self.current_pairings):
-            request = self.get_request_for_pair(pair_idx, round_idx)
+            request = self.get_request_for_pair(pair_idx, round_idx, first_agent=a)
             self.current_requests[a] = request
             self.current_requests[b] = request
             pair_requests[pair_idx] = request
@@ -319,7 +332,7 @@ class ChatbotEnvironment(BaseEnvironment):
 
         # Use base helpers for observation, action generation, and report processing
         observations = await self._compose_observations(paired_agents, round_idx)
-        all_action_sets, all_raw_results = await self._generate_actions(paired_agents, observations)
+        all_action_sets, all_raw_results = await self._generate_actions(paired_agents, observations, round_idx)
         mechanism_result, num_messages, num_reports = await self._process_reports_and_messages(
             all_action_sets, round_idx
         )

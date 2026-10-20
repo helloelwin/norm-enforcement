@@ -38,6 +38,7 @@ class SocialEnvConfig(BaseEnvironmentConfig):
     # Judge settings (PersonaJudge: sampled personas vote on posts)
     persona_path: str = "data/judge-personas.json"
     max_personas: int = 64
+    judge_max_tokens: int = 4096  # output cap per persona vote, reasoning included (the release fixed 1,024)
 
     # Visibility settings
     num_top_posts: int = 8  # Top-K posts shown to all agents
@@ -123,6 +124,7 @@ class SocialEnvironment(BaseEnvironment):
             provider=judge_provider,
             all_personas=all_personas,
             max_personas=self.config.max_personas,
+            max_tokens=self.config.judge_max_tokens,
         )
 
     def compose_env_prompt(self, agent_idx: int, prompt_variant: str = "") -> str:
